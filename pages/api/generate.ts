@@ -29,6 +29,10 @@ export default async function handler(
 
   const { tables, queryInput } = req.body;
 
+  if (!tables) {
+    return res.status(400).json({ error: "Tables are required" });
+  }
+
   const prompt = generatePrompt(tables, queryInput);
 
   try {

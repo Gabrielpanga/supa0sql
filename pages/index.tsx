@@ -58,6 +58,11 @@ export default function Home({ user }: Props) {
   }, [supabaseUrl, supabaseAnnonKey]);
 
   const onGenerateQuery = useCallback(() => {
+    if (!tables) {
+      alert('Please load tables first by clicking "Load tables"');
+      return;
+    }
+
     const fetchData = async () => {
       const { data } = await axios.post("/api/generate", {
         tables,
