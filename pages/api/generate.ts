@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { DBTable } from "../../utils/types";
 import { Configuration, OpenAIApi } from "openai";
-import { saveHistory } from "../../utils/supabase-admin";
+import { getHistoryFromUser, saveHistory } from "../../utils/supabase-admin";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,6 +31,11 @@ export default async function handler(
 
   if (!tables) {
     return res.status(400).json({ error: "Tables are required" });
+  }
+
+  const histories = await getHistoryFromUser(session.user.id);
+  if (histories.length > 10) {
+    return res.status(400).json({ error: "You have reached the limit" });
   }
 
   const prompt = generatePrompt(tables, queryInput);
