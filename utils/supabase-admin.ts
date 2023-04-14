@@ -9,14 +9,14 @@ const supabaseAdmin = createClient(
 );
 
 // Save the history of the query
-async function saveHistory(
-  userId: number,
+export async function saveHistory(
+  userId: string,
   prompt: string,
   textInput: string,
   sql: string,
   tableSchema: any
 ) {
-  const { error } = await supabaseAdmin.from("query_history").insert({
+  const { error } = await supabaseAdmin.from("queries_history").insert({
     user_id: userId,
     generated_prompt: prompt,
     text_input: textInput,
@@ -35,7 +35,7 @@ export async function getHistoryFromUser(
   userId: string
 ): Promise<QueryHistory[]> {
   const { data, error } = await supabaseAdmin
-    .from("query_history")
+    .from("queries_history")
     .select("*")
     .eq("user_id", userId);
 
