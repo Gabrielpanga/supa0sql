@@ -27,9 +27,13 @@ import {
   Subtitle,
   TabList,
   Tab,
+  TextInput,
+  Toggle,
+  ToggleItem,
 } from "@tremor/react";
 import { DBTable } from "../utils/types";
 import { getHistoryFromUser } from "../utils/supabase-admin";
+import axios from "axios";
 
 interface Props {
   user: User;
@@ -38,15 +42,24 @@ interface Props {
 
 export default function Home({ user }: Props) {
   const [selectedView, setSelectedView] = useState("1");
+  const [supabaseUrl, setSupabaseUrl] = useState("");
+  const [supabaseAnnonKey, setSupabaseAnnonKey] = useState("");
+  const [useConfig, setUseConfig] = useState(false);
 
   // call schema api endpoint to recover table and store it on state
   const [tables, setTables] = useState<DBTable[]>([]);
-  const onFetchTables = useCallback(async () => {
-    console.log("fetching");
-    const res = await fetch("/api/schema");
-    const data = await res.json();
-    setTables(data.tables);
-  }, []);
+  const onFetchTables = useCallback(() => {
+    const fetchData = async () => {
+      console.log("fetching", supabaseUrl, supabaseAnnonKey);
+      const { data } = await axios.post("/api/schema", {
+        supabaseUrl,
+        supabaseAnnonKey,
+      });
+      return data.tables;
+    };
+
+    fetchData().then((tables) => setTables(tables));
+  }, [supabaseUrl, supabaseAnnonKey]);
 
   return (
     <div className={styles.container}>
@@ -107,14 +120,41 @@ export default function Home({ user }: Props) {
               ))}
             </ColGrid>
 
-            <Button
-              onClick={onFetchTables}
-              marginTop="mt-6"
-              size="xl"
-              color="red"
-            >
-              Load tables
-            </Button>
+            <Block maxWidth="max-w-md" marginTop="mt-20">
+              <Toggle
+                color="zinc"
+                value={useConfig ? "true" : "false"}
+                onValueChange={(value) => setUseConfig(value === "true")}
+              >
+                <ToggleItem value="false" text="Use Env Config" />
+                <ToggleItem value="true" text="Use Input" />
+              </Toggle>
+
+              <TextInput
+                placeholder="Supabase URL"
+                marginTop="mt-6"
+                onChange={(e) => setSupabaseUrl(e.target.value)}
+                value={supabaseUrl}
+                disabled={!useConfig}
+              />
+
+              <TextInput
+                placeholder="Supabase Annon Key"
+                marginTop="mt-6"
+                onChange={(e) => setSupabaseAnnonKey(e.target.value)}
+                value={supabaseAnnonKey}
+                disabled={!useConfig}
+              />
+
+              <Button
+                onClick={onFetchTables}
+                marginTop="mt-6"
+                size="xl"
+                color="red"
+              >
+                Load tables
+              </Button>
+            </Block>
           </>
         ) : undefined}
 

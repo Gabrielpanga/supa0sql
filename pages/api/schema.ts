@@ -4,6 +4,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 const { IGNORE_TABLES = "" } = process.env;
 
 async function getTableDefinitions(supabaseUrl?: string, anonKey?: string) {
+  if (!supabaseUrl && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("Missing supabase url");
+  }
+
+  if (!anonKey && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error("Missing supabase anon key");
+  }
+
   const url = supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = anonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -40,7 +48,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { url, anon } = req.body;
-  const tables = await getTableDefinitions(url, anon);
-  return res.status(200).json({ tables });
+  const { supabaseUrl, supabaseAnnonKey } = req.body;
+  console.log("Reviewing parameters", { supabaseUrl, supabaseAnnonKey });
+  try {
+    const tables = await getTableDefinitions(supabaseUrl, supabaseAnnonKey);
+    return res.status(200).json({ tables });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: (error as Error).message });
+  }
 }
