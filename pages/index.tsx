@@ -10,6 +10,26 @@ import {
   User,
   createServerSupabaseClient,
 } from "@supabase/auth-helpers-nextjs";
+import { useCallback, useState } from "react";
+import { DesktopComputerIcon } from "@heroicons/react/solid";
+import {
+  Button,
+  Card,
+  Flex,
+  Icon,
+  List,
+  ListItem,
+  Title,
+  Text,
+  Bold,
+  Block,
+  ColGrid,
+  Subtitle,
+  TabList,
+  Tab,
+} from "@tremor/react";
+import { DBTable } from "../utils/types";
+import { getHistoryFromUser } from "../utils/supabase-admin";
 
 interface Props {
   user: User;
@@ -17,6 +37,17 @@ interface Props {
 }
 
 export default function Home({ user }: Props) {
+  const [selectedView, setSelectedView] = useState("1");
+
+  // call schema api endpoint to recover table and store it on state
+  const [tables, setTables] = useState<DBTable[]>([]);
+  const onFetchTables = useCallback(async () => {
+    console.log("fetching");
+    const res = await fetch("/api/schema");
+    const data = await res.json();
+    setTables(data.tables);
+  }, []);
+
   return (
     <div className={styles.container}>
       <Head>
@@ -25,59 +56,72 @@ export default function Home({ user }: Props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js</a>, {user.email}!
-        </h1>
+      <main className="bg-slate-50 p-6 sm:p-10">
+        <Title>Welcome to Supa0SQL, {user.email}!</Title>
+        <Subtitle>
+          This is your SQL companion to draft charts from natural language
+        </Subtitle>
 
-        <p className={styles.description}>
-          Get started by editing{" "}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
+        <TabList
+          defaultValue="1"
+          onValueChange={(value) => setSelectedView(value)}
+          marginTop="mt-6"
+        >
+          <Tab value="1" text="Schema" />
+          <Tab value="2" text="Charts" />
+        </TabList>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+        {selectedView === "1" ? (
+          <>
+            <ColGrid numCols={6} gapX="gap-x-6" gapY="gap-y-6" marginTop="mt-6">
+              {tables.map((table) => (
+                <Card key={table.name} maxWidth="max-w-sm">
+                  <Title>{table.name}</Title>
+                  <List marginTop="mt-4">
+                    {table.fields.map((field) => (
+                      <ListItem key={field.name}>
+                        <Flex
+                          justifyContent="justify-start"
+                          spaceX="space-x-4"
+                          truncate={true}
+                        >
+                          <Icon
+                            variant="light"
+                            icon={DesktopComputerIcon}
+                            size="md"
+                            color="emerald"
+                          />
+                          <Block truncate={true}>
+                            <Text truncate={true}>
+                              <Bold>{field.name}</Bold>
+                            </Text>
+                            <Text truncate={true}>
+                              {field.type || field.format}
+                            </Text>
+                          </Block>
+                        </Flex>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Card>
+              ))}
+            </ColGrid>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+            <Button
+              onClick={onFetchTables}
+              marginTop="mt-6"
+              size="xl"
+              color="red"
+            >
+              Load tables
+            </Button>
+          </>
+        ) : undefined}
 
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        {selectedView === "2" ? <></> : undefined}
       </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+      <footer></footer>
     </div>
   );
 }
@@ -98,11 +142,14 @@ export async function getServerSideProps(
       },
     };
   }
+
   // TODO: Get the user's history to avoid abuse
+
+  const history = await getHistoryFromUser(session.user.id);
   return {
     props: {
       user: session.user,
-      history: [],
+      history,
     },
   };
 }
