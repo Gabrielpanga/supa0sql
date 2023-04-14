@@ -1,10 +1,5 @@
-import type {
-  GetServerSidePropsContext,
-  GetStaticPropsResult,
-  NextPage,
-} from "next";
+import type { GetServerSidePropsContext, GetStaticPropsResult } from "next";
 import Head from "next/head";
-import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import {
   User,
@@ -34,7 +29,7 @@ import {
 import { DBTable } from "../utils/types";
 import { getHistoryFromUser } from "../utils/supabase-admin";
 import axios from "axios";
-
+import SyntaxHighlighter from "react-syntax-highlighter";
 interface Props {
   user: User;
   history: any[];
@@ -45,12 +40,13 @@ export default function Home({ user }: Props) {
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseAnnonKey, setSupabaseAnnonKey] = useState("");
   const [useConfig, setUseConfig] = useState(false);
+  const [queryInput, setQueryInput] = useState("");
+  const [generatedQuery, setGeneratedQuery] = useState("");
 
   // call schema api endpoint to recover table and store it on state
   const [tables, setTables] = useState<DBTable[]>([]);
   const onFetchTables = useCallback(() => {
     const fetchData = async () => {
-      console.log("fetching", supabaseUrl, supabaseAnnonKey);
       const { data } = await axios.post("/api/schema", {
         supabaseUrl,
         supabaseAnnonKey,
@@ -60,6 +56,18 @@ export default function Home({ user }: Props) {
 
     fetchData().then((tables) => setTables(tables));
   }, [supabaseUrl, supabaseAnnonKey]);
+
+  const onGenerateQuery = useCallback(() => {
+    const fetchData = async () => {
+      const { data } = await axios.post("/api/generate", {
+        tables,
+        queryInput,
+      });
+      return data.result;
+    };
+
+    fetchData().then((sqlQuery) => setGeneratedQuery(sqlQuery));
+  }, [tables, queryInput]);
 
   return (
     <div className={styles.container}>
@@ -158,7 +166,38 @@ export default function Home({ user }: Props) {
           </>
         ) : undefined}
 
-        {selectedView === "2" ? <></> : undefined}
+        {selectedView === "2" ? (
+          <>
+            <Block>
+              <TextInput
+                placeholder="Type what you want to query... (e.g. 'show me the number of sales per customer')"
+                marginTop="mt-6"
+                onChange={(e) => setQueryInput(e.target.value)}
+                value={queryInput}
+              />
+              <Button
+                onClick={onGenerateQuery}
+                marginTop="mt-6"
+                size="xl"
+                color="blue"
+              >
+                Generate Query
+              </Button>
+
+              <Block marginTop="mt-20">
+                <SyntaxHighlighter
+                  language="sql"
+                  customStyle={{
+                    padding: 40,
+                    fontSize: 18,
+                  }}
+                >
+                  {generatedQuery}
+                </SyntaxHighlighter>
+              </Block>
+            </Block>
+          </>
+        ) : undefined}
       </main>
 
       <footer></footer>
