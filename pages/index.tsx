@@ -26,22 +26,26 @@ import {
   Toggle,
   ToggleItem,
 } from "@tremor/react";
-import { DBTable } from "../utils/types";
+import { DBTable, MinimalHistory, getMinimalHistory } from "../utils/types";
 import { getHistoryFromUser } from "../utils/supabase-admin";
 import axios from "axios";
 import SyntaxHighlighter from "react-syntax-highlighter";
+import DynamicChart from "../components/DynamicChart";
 interface Props {
   user: User;
   history: any[];
 }
 
-export default function Home({ user }: Props) {
+export default function Home({ user, history }: Props) {
   const [selectedView, setSelectedView] = useState("1");
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseAnnonKey, setSupabaseAnnonKey] = useState("");
   const [useConfig, setUseConfig] = useState(false);
   const [queryInput, setQueryInput] = useState("");
-  const [generatedQuery, setGeneratedQuery] = useState("");
+  const [generatedQuery, setGeneratedQuery] = useState<
+    MinimalHistory | undefined
+  >(undefined);
+  const [histories, setHistories] = useState<MinimalHistory[]>([...history]);
 
   // call schema api endpoint to recover table and store it on state
   const [tables, setTables] = useState<DBTable[]>([]);
@@ -54,11 +58,18 @@ export default function Home({ user }: Props) {
       return data.tables;
     };
 
-    fetchData().then((tables) => setTables(tables));
+    fetchData()
+      .then((tables) => setTables(tables))
+      .catch((err) => {
+        alert(
+          "Error while fetching tables. Please check your Supabase URL and Annon Key: " +
+            err.response.data.error
+        );
+      });
   }, [supabaseUrl, supabaseAnnonKey]);
 
   const onGenerateQuery = useCallback(() => {
-    if (!tables) {
+    if (!tables || tables.length === 0) {
       alert('Please load tables first by clicking "Load tables"');
       return;
     }
@@ -68,12 +79,57 @@ export default function Home({ user }: Props) {
         tables,
         queryInput,
       });
-      return data.result;
+      return data.data;
     };
 
-    fetchData().then((sqlQuery) => setGeneratedQuery(sqlQuery));
-  }, [tables, queryInput]);
+    fetchData()
+      .then((history) => {
+        setGeneratedQuery(history);
+        setHistories([...histories, history]);
+      })
+      .catch((err) => {
+        alert(
+          "Error while generating query. Please check your query: " +
+            err.response.data.error
+        );
+      });
+  }, [tables, queryInput, histories]);
 
+  const onFetchResults = (historyId: number) => {
+    const fetchData = async () => {
+      const { data } = await axios.post(`/api/query?history_id=${historyId}`);
+      return data.data;
+    };
+    fetchData().then((results) => {
+      if (generatedQuery?.id === historyId) {
+        setGeneratedQuery({
+          ...generatedQuery,
+          response: {
+            ...(generatedQuery.response || { type: "donut" }),
+            results,
+          },
+        });
+      }
+
+      const historyToUpdate = histories.find((h) => h.id === historyId);
+      if (!historyToUpdate) return;
+      historyToUpdate.response = {
+        ...(historyToUpdate.response || { type: "donut" }),
+        results,
+      };
+      setHistories([...histories]);
+    });
+  };
+
+  const onSaveHistory = async (historyId: number) => {
+    const history = histories.find((h) => h.id === historyId);
+    if (!history) return;
+    await axios.patch(`/api/history/${historyId}`, {
+      response: history?.response,
+    });
+  };
+
+  console.log("generatedQuery", generatedQuery);
   return (
     <div className={styles.container}>
       <Head>
@@ -94,7 +150,8 @@ export default function Home({ user }: Props) {
           marginTop="mt-6"
         >
           <Tab value="1" text="Schema" />
-          <Tab value="2" text="Charts" />
+          <Tab value="2" text="Create" />
+          <Tab value="3" text="History" />
         </TabList>
 
         {selectedView === "1" ? (
@@ -197,9 +254,81 @@ export default function Home({ user }: Props) {
                     fontSize: 18,
                   }}
                 >
-                  {generatedQuery}
+                  {generatedQuery?.prompt_response || ""}
                 </SyntaxHighlighter>
               </Block>
+
+              {generatedQuery && !generatedQuery.response.results && (
+                <Block marginTop="mt-20">
+                  <Button
+                    onClick={() => onFetchResults(generatedQuery.id)}
+                    marginTop="mt-6"
+                    size="xl"
+                    color="green"
+                  >
+                    Fetch Results
+                  </Button>
+                </Block>
+              )}
+
+              {generatedQuery?.response.results && (
+                <Block marginTop="mt-20">
+                  <DynamicChart
+                    results={generatedQuery.response.results}
+                    type={generatedQuery.response.type}
+                  />
+                </Block>
+              )}
+            </Block>
+          </>
+        ) : undefined}
+
+        {selectedView === "3" ? (
+          <>
+            <Block>
+              <List marginTop="mt-4">
+                {histories.map((query) => (
+                  <ListItem key={query.id}>
+                    <Card>
+                      <Flex
+                        justifyContent="justify-start"
+                        spaceX="space-x-4"
+                        truncate={true}
+                      >
+                        <Icon
+                          variant="light"
+                          icon={DesktopComputerIcon}
+                          size="md"
+                          color="emerald"
+                        />
+                        <Block truncate={true}>
+                          <Text truncate={true}>
+                            <Bold>{query.prompt_response}</Bold>
+                          </Text>
+                          <Text truncate={true}>{query.created_at}</Text>
+                        </Block>
+
+                        {query.response && query.response.results ? (
+                          <>
+                            <DynamicChart
+                              results={query.response.results}
+                              type={query.response.type}
+                            />
+                            <Button onClick={() => onSaveHistory(query.id)}>
+                              Save
+                            </Button>
+                          </>
+                        ) : (
+                          <Button onClick={() => onFetchResults(query.id)}>
+                            {" "}
+                            Get results
+                          </Button>
+                        )}
+                      </Flex>
+                    </Card>
+                  </ListItem>
+                ))}
+              </List>
             </Block>
           </>
         ) : undefined}
@@ -226,14 +355,11 @@ export async function getServerSideProps(
       },
     };
   }
-
-  // TODO: Get the user's history to avoid abuse
-
-  const history = await getHistoryFromUser(session.user.id);
+  const histories = await getHistoryFromUser(session.user.id);
   return {
     props: {
       user: session.user,
-      history,
+      history: histories.map(getMinimalHistory),
     },
   };
 }
