@@ -1,3 +1,8 @@
+import {
+  SupabaseClient,
+  createBrowserSupabaseClient,
+} from "@supabase/auth-helpers-nextjs";
+
 export const getURL = () => {
   let url =
     process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
@@ -9,3 +14,18 @@ export const getURL = () => {
   url = url.charAt(url.length - 1) === "/" ? url : `${url}/`;
   return url;
 };
+
+export function getSupabaseInstanceFromConfig(config?: {
+  supabaseUrl?: string;
+  supabaseAnnonKey?: string;
+}): SupabaseClient | undefined {
+  const { supabaseUrl, supabaseAnnonKey } = config || {};
+  if (!supabaseUrl || !supabaseAnnonKey) {
+    return undefined;
+  }
+  console.log("Using customized supabase client");
+  return createBrowserSupabaseClient({
+    supabaseUrl,
+    supabaseKey: supabaseAnnonKey,
+  });
+}

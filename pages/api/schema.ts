@@ -35,7 +35,7 @@ async function getTableDefinitions(supabaseUrl?: string, anonKey?: string) {
           format: property.format,
           type: property.type,
           default: property.default,
-          required: tableDefinition.required.includes(property.name),
+          required: (tableDefinition.required || []).includes(property.name),
         };
       }),
     });
@@ -48,7 +48,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { supabaseUrl, supabaseAnnonKey } = req.body;
+  const {
+    config: { supabaseUrl, supabaseAnnonKey },
+  } = req.body || { config: {} };
   console.log("Reviewing parameters", { supabaseUrl, supabaseAnnonKey });
   try {
     const tables = await getTableDefinitions(supabaseUrl, supabaseAnnonKey);

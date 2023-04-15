@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { NextApiRequest, NextApiResponse } from "next";
 import { callFunction, getHistoryById } from "../../utils/supabase-admin";
+import { getSupabaseInstanceFromConfig } from "../../utils/helpers";
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,6 +23,8 @@ export default async function handler(
 
   const { history_id } = req.query as { history_id: string };
 
+  const { config } = req.body;
+
   if (!history_id) {
     return res.status(400).json({ error: "history_id is required" });
   }
@@ -36,6 +39,7 @@ export default async function handler(
     return res.status(401).json({ error: "Not authorized" });
   }
 
-  const data = await callFunction(history_id);
+  const customSupabaseClient = getSupabaseInstanceFromConfig(config);
+  const data = await callFunction(history_id, customSupabaseClient);
   return res.status(200).json({ data });
 }

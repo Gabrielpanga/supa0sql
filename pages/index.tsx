@@ -29,8 +29,6 @@ import {
 import { DBTable, MinimalHistory, getMinimalHistory } from "../utils/types";
 import { getHistoryFromUser } from "../utils/supabase-admin";
 import axios from "axios";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import DynamicChart from "../components/DynamicChart";
 import History from "../components/History";
 
 interface Props {
@@ -54,8 +52,10 @@ export default function Home({ user, history }: Props) {
   const onFetchTables = useCallback(() => {
     const fetchData = async () => {
       const { data } = await axios.post("/api/schema", {
-        supabaseUrl,
-        supabaseAnnonKey,
+        config: {
+          supabaseUrl,
+          supabaseAnnonKey,
+        },
       });
       return data.tables;
     };
@@ -80,6 +80,10 @@ export default function Home({ user, history }: Props) {
       const { data } = await axios.post("/api/generate", {
         tables,
         queryInput,
+        config: {
+          supabaseUrl,
+          supabaseAnnonKey,
+        },
       });
       return data.data;
     };
@@ -95,11 +99,16 @@ export default function Home({ user, history }: Props) {
             err.response.data.error
         );
       });
-  }, [tables, queryInput, histories]);
+  }, [tables, queryInput, histories, supabaseUrl, supabaseAnnonKey]);
 
   const onFetchResults = (historyId: number) => {
     const fetchData = async () => {
-      const { data } = await axios.post(`/api/query?history_id=${historyId}`);
+      const { data } = await axios.post(`/api/query?history_id=${historyId}`, {
+        config: {
+          supabaseUrl,
+          supabaseAnnonKey,
+        },
+      });
       return data.data;
     };
     fetchData().then((results) => {

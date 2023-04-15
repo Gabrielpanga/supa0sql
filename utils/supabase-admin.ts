@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
 import { QueryHistory } from "./types";
 
 // Note: supabaseAdmin uses the SERVICE_ROLE_KEY which you must only use in a secure server-side context
@@ -87,7 +87,8 @@ export async function getHistoryById(historyId: number) {
 
 export async function createFunction(
   sqlFunctionQuery: string,
-  history_id: number
+  history_id: number,
+  supaClient?: SupabaseClient
 ): Promise<string | undefined> {
   const functionName = `exec_query_${history_id}`;
 
@@ -98,7 +99,7 @@ export async function createFunction(
     .replace("RETURN QUERY", "");
   finalQuery = `${finalQuery}; $$ LANGUAGE SQL;`;
 
-  const { error } = await supabaseAdmin.rpc(
+  const { error } = await (supaClient || supabaseAdmin).rpc(
     "execute_api_query",
     {
       query: finalQuery,
@@ -114,8 +115,13 @@ export async function createFunction(
   return functionName;
 }
 
-export async function callFunction(historyId: string) {
-  const { data, error } = await supabaseAdmin.rpc(`exec_query_${historyId}`);
+export async function callFunction(
+  historyId: string,
+  supaClient?: SupabaseClient
+) {
+  const { data, error } = await (supaClient || supabaseAdmin).rpc(
+    `exec_query_${historyId}`
+  );
 
   if (error) {
     console.log({ error });

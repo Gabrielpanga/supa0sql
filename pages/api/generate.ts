@@ -7,6 +7,7 @@ import {
   getHistoryFromUser,
   saveHistory,
 } from "../../utils/supabase-admin";
+import { getSupabaseInstanceFromConfig } from "../../utils/helpers";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,7 +32,7 @@ export default async function handler(
     return res.status(401).json({ error: "Not authenticated" });
   }
 
-  const { tables, queryInput } = req.body;
+  const { tables, queryInput, config } = req.body;
 
   if (!tables || tables.length === 0) {
     return res.status(400).json({ error: "Tables are required" });
@@ -61,7 +62,8 @@ export default async function handler(
     );
 
     if (history) {
-      await createFunction(sqlFunction, history.id);
+      const supabaseCustomClient = getSupabaseInstanceFromConfig(config);
+      await createFunction(sqlFunction, history.id, supabaseCustomClient);
     }
 
     return res.status(200).json({ data: getMinimalHistory(history) });
