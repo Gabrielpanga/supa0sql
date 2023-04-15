@@ -9,9 +9,9 @@ export default function DynamicChart({
   results: any[];
   type: string;
 }) {
-  const keys = Object.keys(results[0]);
+  const keys = Object.keys(results[0] || {});
 
-  if (keys.length > 2) {
+  if (keys.length > 2 || keys.length === 0) {
     // TODO: Not supported so far
     return <></>;
   }

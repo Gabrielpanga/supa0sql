@@ -1,4 +1,4 @@
-import { DesktopComputerIcon } from "@heroicons/react/solid";
+import { DesktopComputerIcon, ExclamationIcon } from "@heroicons/react/solid";
 import {
   Block,
   Button,
@@ -11,6 +11,7 @@ import {
   Tab,
   Title,
   Subtitle,
+  Callout,
 } from "@tremor/react";
 import { MinimalHistory } from "../../utils/types";
 import DynamicChart from "../DynamicChart";
@@ -74,6 +75,24 @@ export default function History({
         <>
           {hasResults ? (
             <>
+              {response.results.length === 0 && (
+                <Callout
+                  marginTop="mt-4"
+                  title="Query coulnt be displayed"
+                  icon={ExclamationIcon}
+                  color="rose"
+                  text="The query didn't return any result"
+                />
+              )}
+              {Object.keys((response.results || [])[0] || {}).length > 2 && (
+                <Callout
+                  marginTop="mt-4"
+                  title="Query coulnt be displayed"
+                  icon={ExclamationIcon}
+                  color="rose"
+                  text="The results have more than two columns, not supported yet"
+                />
+              )}
               <DynamicChart results={response.results} type={response.type} />
               <Button
                 onClick={() => onSaveHistory(id)}
