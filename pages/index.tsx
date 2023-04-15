@@ -31,6 +31,8 @@ import { getHistoryFromUser } from "../utils/supabase-admin";
 import axios from "axios";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import DynamicChart from "../components/DynamicChart";
+import History from "../components/History";
+
 interface Props {
   user: User;
   history: any[];
@@ -129,7 +131,6 @@ export default function Home({ user, history }: Props) {
     });
   };
 
-  console.log("generatedQuery", generatedQuery);
   return (
     <div className={styles.container}>
       <Head>
@@ -258,7 +259,7 @@ export default function Home({ user, history }: Props) {
                 </SyntaxHighlighter>
               </Block>
 
-              {generatedQuery && !generatedQuery.response.results && (
+              {generatedQuery && !generatedQuery.response?.results && (
                 <Block marginTop="mt-20">
                   <Button
                     onClick={() => onFetchResults(generatedQuery.id)}
@@ -271,7 +272,7 @@ export default function Home({ user, history }: Props) {
                 </Block>
               )}
 
-              {generatedQuery?.response.results && (
+              {generatedQuery?.response?.results && (
                 <Block marginTop="mt-20">
                   <DynamicChart
                     results={generatedQuery.response.results}
@@ -285,50 +286,17 @@ export default function Home({ user, history }: Props) {
 
         {selectedView === "3" ? (
           <>
-            <Block>
-              <List marginTop="mt-4">
+            <Block marginTop="mt-10">
+              <ColGrid numColsSm={2} gapX="gap-x-6" gapY="gap-y-6">
                 {histories.map((query) => (
-                  <ListItem key={query.id}>
-                    <Card>
-                      <Flex
-                        justifyContent="justify-start"
-                        spaceX="space-x-4"
-                        truncate={true}
-                      >
-                        <Icon
-                          variant="light"
-                          icon={DesktopComputerIcon}
-                          size="md"
-                          color="emerald"
-                        />
-                        <Block truncate={true}>
-                          <Text truncate={true}>
-                            <Bold>{query.prompt_response}</Bold>
-                          </Text>
-                          <Text truncate={true}>{query.created_at}</Text>
-                        </Block>
-
-                        {query.response && query.response.results ? (
-                          <>
-                            <DynamicChart
-                              results={query.response.results}
-                              type={query.response.type}
-                            />
-                            <Button onClick={() => onSaveHistory(query.id)}>
-                              Save
-                            </Button>
-                          </>
-                        ) : (
-                          <Button onClick={() => onFetchResults(query.id)}>
-                            {" "}
-                            Get results
-                          </Button>
-                        )}
-                      </Flex>
-                    </Card>
-                  </ListItem>
+                  <History
+                    key={query.id}
+                    history={query}
+                    onSaveHistory={onSaveHistory}
+                    onFetchResults={onFetchResults}
+                  />
                 ))}
-              </List>
+              </ColGrid>
             </Block>
           </>
         ) : undefined}

@@ -22,7 +22,7 @@ export type QueryHistory = {
   generated_prompt: string;
   text_input: string;
   prompt_response: string;
-  response: QueryResponse;
+  response?: QueryResponse;
   tables: DBTable[];
   created_at: string;
 };
