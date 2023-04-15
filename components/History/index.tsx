@@ -1,4 +1,10 @@
-import { DesktopComputerIcon, ExclamationIcon } from "@heroicons/react/solid";
+import {
+  ChartPieIcon,
+  DesktopComputerIcon,
+  ExclamationIcon,
+  PresentationChartBarIcon,
+  PresentationChartLineIcon,
+} from "@heroicons/react/solid";
 import {
   Block,
   Button,
@@ -12,6 +18,8 @@ import {
   Title,
   Subtitle,
   Callout,
+  ToggleItem,
+  Toggle,
 } from "@tremor/react";
 import { MinimalHistory } from "../../utils/types";
 import DynamicChart from "../DynamicChart";
@@ -24,10 +32,12 @@ export default function History({
   onFetchResults,
 }: {
   history: MinimalHistory;
-  onSaveHistory: (id: number) => void;
+  onSaveHistory: (id: number, response?: MinimalHistory["response"]) => void;
   onFetchResults: (id: number) => void;
 }) {
   const [selectedView, setSelectedView] = useState("1");
+  const [selectedType, setType] = useState(response?.type || "Donut");
+
   const hasResults = response?.results;
   return (
     <Card>
@@ -58,7 +68,7 @@ export default function History({
       </TabList>
 
       {selectedView === "1" && (
-        <Block marginTop="mt-20">
+        <Block marginTop="mt-5">
           <SyntaxHighlighter
             language="sql"
             customStyle={{
@@ -93,15 +103,46 @@ export default function History({
                   text="The results have more than two columns, not supported yet"
                 />
               )}
-              <DynamicChart results={response.results} type={response.type} />
-              <Button
-                onClick={() => onSaveHistory(id)}
-                marginTop="mt-6"
-                size="md"
-                color="green"
-              >
-                Save
-              </Button>
+              <DynamicChart results={response.results} type={selectedType} />
+
+              <Flex justifyContent="justify-center">
+                <Toggle value={selectedType} onValueChange={setType}>
+                  <ToggleItem value="Donut" text="Donut" icon={ChartPieIcon} />
+                  <ToggleItem
+                    value="Bar"
+                    text="Bar"
+                    icon={PresentationChartBarIcon}
+                  />
+                  <ToggleItem
+                    value="Line"
+                    text="Line"
+                    icon={PresentationChartLineIcon}
+                  />
+                </Toggle>
+              </Flex>
+              <Flex justifyContent="justify-center" spaceX="space-x-8">
+                <Button
+                  onClick={() =>
+                    onSaveHistory(id, {
+                      results: response?.results,
+                      type: selectedType,
+                    })
+                  }
+                  marginTop="mt-6"
+                  size="md"
+                  color="green"
+                >
+                  Save
+                </Button>
+                <Button
+                  onClick={() => onFetchResults(id)}
+                  marginTop="mt-6"
+                  size="md"
+                  color="lime"
+                >
+                  Refresh
+                </Button>
+              </Flex>
             </>
           ) : (
             <Button

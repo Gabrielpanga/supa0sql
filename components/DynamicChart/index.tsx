@@ -1,6 +1,12 @@
-import { Card, Title, DonutChart, Subtitle, Color } from "@tremor/react";
+import { DonutChart, Color, BarChart, LineChart } from "@tremor/react";
 
-const COLORS: Color[] = ["slate", "violet", "indigo", "rose", "cyan", "amber"];
+const COLORS: Color[] = ["indigo", "rose", "cyan", "amber", "slate", "violet"];
+
+const components: Record<string, any> = {
+  donut: DonutChart,
+  bar: BarChart,
+  line: LineChart,
+};
 
 export default function DynamicChart({
   results,
@@ -21,13 +27,18 @@ export default function DynamicChart({
     (key) => typeof results[0][key] === "number" && key !== dataKey
   );
 
+  const CustomChart = components[type.toLocaleLowerCase()];
   return (
-    <DonutChart
-      data={results}
-      category={categoryKey}
-      dataKey={dataKey}
-      marginTop="mt-6"
-      colors={COLORS}
-    />
+    <>
+      <CustomChart
+        data={results}
+        category={categoryKey}
+        categories={[categoryKey]}
+        dataKey={dataKey}
+        index={dataKey}
+        marginTop="mt-6"
+        colors={COLORS}
+      />
+    </>
   );
 }

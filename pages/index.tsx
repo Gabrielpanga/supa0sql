@@ -136,11 +136,17 @@ export default function Home({ user, history }: Props) {
     });
   };
 
-  const onSaveHistory = async (historyId: number) => {
+  const onSaveHistory = async (
+    historyId: number,
+    response?: MinimalHistory["response"]
+  ) => {
     const history = histories.find((h) => h.id === historyId);
     if (!history) return;
     await axios.patch(`/api/history/${historyId}`, {
-      response: history?.response,
+      response: {
+        ...history?.response,
+        ...(response || {}),
+      },
     });
   };
 
