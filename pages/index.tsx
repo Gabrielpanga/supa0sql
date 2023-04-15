@@ -87,7 +87,7 @@ export default function Home({ user, history }: Props) {
     fetchData()
       .then((history) => {
         setGeneratedQuery(history);
-        setHistories([...histories, history]);
+        setHistories([history, ...histories]);
       })
       .catch((err) => {
         alert(
@@ -246,39 +246,15 @@ export default function Home({ user, history }: Props) {
               >
                 Generate Query
               </Button>
+            </Block>
 
-              <Block marginTop="mt-20">
-                <SyntaxHighlighter
-                  language="sql"
-                  customStyle={{
-                    padding: 40,
-                    fontSize: 18,
-                  }}
-                >
-                  {generatedQuery?.prompt_response || ""}
-                </SyntaxHighlighter>
-              </Block>
-
-              {generatedQuery && !generatedQuery.response?.results && (
-                <Block marginTop="mt-20">
-                  <Button
-                    onClick={() => onFetchResults(generatedQuery.id)}
-                    marginTop="mt-6"
-                    size="xl"
-                    color="green"
-                  >
-                    Fetch Results
-                  </Button>
-                </Block>
-              )}
-
-              {generatedQuery?.response?.results && (
-                <Block marginTop="mt-20">
-                  <DynamicChart
-                    results={generatedQuery.response.results}
-                    type={generatedQuery.response.type}
-                  />
-                </Block>
+            <Block marginTop="mt-10">
+              {generatedQuery && (
+                <History
+                  history={generatedQuery}
+                  onSaveHistory={onSaveHistory}
+                  onFetchResults={onFetchResults}
+                />
               )}
             </Block>
           </>
