@@ -25,11 +25,15 @@ import {
   TextInput,
   Toggle,
   ToggleItem,
+  AccordionHeader,
+  Accordion,
+  AccordionBody,
 } from "@tremor/react";
 import { DBTable, MinimalHistory, getMinimalHistory } from "../utils/types";
 import { getHistoryFromUser } from "../utils/supabase-admin";
 import axios from "axios";
 import History from "../components/History";
+import SyntaxHighlighter from "react-syntax-highlighter";
 
 interface Props {
   user: User;
@@ -151,8 +155,44 @@ export default function Home({ user, history }: Props) {
       <main className="bg-slate-50 p-6 sm:p-10">
         <Title>Welcome to Supa0SQL, {user.email}!</Title>
         <Subtitle>
-          This is your SQL companion to draft charts from natural language
+          This is your SQL companion to draft charts from natural language.
         </Subtitle>
+
+        <Accordion>
+          <AccordionHeader>Steps on how to use it:</AccordionHeader>
+          <AccordionBody>
+            <Text>
+              1. Enter your Supabase URL and Annon Key to load your tables
+            </Text>
+            <Text>
+              2. Write your query in natural language on the second tab
+            </Text>
+            <Text>3. Click on "Generate query" to generate your query </Text>
+            <Text>
+              4. Click on "Run query" to run your query and see the results. For
+              this step you will be required to create a specific function for
+              this app to use on your supabase instance, you should run it
+              directly from your supabase dashboard.
+            </Text>
+
+            <SyntaxHighlighter
+              language="sql"
+              customStyle={{
+                padding: 40,
+                fontSize: 18,
+              }}
+            >
+              {`CREATE OR REPLACE FUNCTION public.execute_api_query(query text, OUT result text)
+              LANGUAGE 'plpgsql'
+          AS $BODY$
+              BEGIN 
+                  EXECUTE query;
+                  return;
+              END 
+          $BODY$ SECURITY DEFINER;`}
+            </SyntaxHighlighter>
+          </AccordionBody>
+        </Accordion>
 
         <TabList
           defaultValue="1"
