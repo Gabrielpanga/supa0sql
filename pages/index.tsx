@@ -167,12 +167,14 @@ export default function Home({ user, history }: Props) {
             <Text>
               2. Write your query in natural language on the second tab
             </Text>
-            <Text>3. Click on "Generate query" to generate your query </Text>
             <Text>
-              4. Click on "Run query" to run your query and see the results. For
-              this step you will be required to create a specific function for
-              this app to use on your supabase instance, you should run it
-              directly from your supabase dashboard.
+              3. Click on &quot;Generate query&quot; to generate your query
+            </Text>
+            <Text>
+              4. Click on &quot;Run query&quot; to run your query and see the
+              results. For this step you will be required to create a specific
+              function for this app to use on your supabase instance, you should
+              run it directly from your supabase dashboard.
             </Text>
 
             <SyntaxHighlighter
