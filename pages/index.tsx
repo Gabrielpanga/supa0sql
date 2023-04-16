@@ -120,7 +120,7 @@ export default function Home({ user, history }: Props) {
         setGeneratedQuery({
           ...generatedQuery,
           response: {
-            ...(generatedQuery.response || { type: "donut" }),
+            ...(generatedQuery.response || { type: "Donut" }),
             results,
           },
         });
@@ -129,7 +129,7 @@ export default function Home({ user, history }: Props) {
       const historyToUpdate = histories.find((h) => h.id === historyId);
       if (!historyToUpdate) return;
       historyToUpdate.response = {
-        ...(historyToUpdate.response || { type: "donut" }),
+        ...(historyToUpdate.response || { type: "Donut" }),
         results,
       };
       setHistories([...histories]);
