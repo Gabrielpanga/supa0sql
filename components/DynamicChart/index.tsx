@@ -1,11 +1,11 @@
-import { DonutChart, Color, BarChart, LineChart } from "@tremor/react";
+import { DonutChart, Color, BarChart, AreaChart } from "@tremor/react";
 
 const COLORS: Color[] = ["indigo", "rose", "cyan", "amber", "slate", "violet"];
 
 const components: Record<string, any> = {
   donut: DonutChart,
   bar: BarChart,
-  line: LineChart,
+  line: AreaChart,
 };
 
 export default function DynamicChart({
