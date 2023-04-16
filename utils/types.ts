@@ -11,9 +11,11 @@ export type DBField = {
   required: boolean;
 };
 
+export type ChartType = "Donut" | "Bar" | "Line" | "Table";
+
 export type QueryResponse = {
   results: any[];
-  type: string;
+  type: ChartType;
 };
 
 export type QueryHistory = {

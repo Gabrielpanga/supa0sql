@@ -1,9 +1,9 @@
 import {
   ChartPieIcon,
   DesktopComputerIcon,
-  ExclamationIcon,
   PresentationChartBarIcon,
   PresentationChartLineIcon,
+  TableIcon,
 } from "@heroicons/react/solid";
 import {
   Block,
@@ -12,16 +12,14 @@ import {
   Flex,
   Icon,
   Text,
-  Bold,
   TabList,
   Tab,
   Title,
   Subtitle,
-  Callout,
   ToggleItem,
   Toggle,
 } from "@tremor/react";
-import { MinimalHistory } from "../../utils/types";
+import { ChartType, MinimalHistory } from "../../utils/types";
 import DynamicChart from "../DynamicChart";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { useState } from "react";
@@ -36,7 +34,9 @@ export default function History({
   onFetchResults: (id: number) => void;
 }) {
   const [selectedView, setSelectedView] = useState("1");
-  const [selectedType, setType] = useState(response?.type || "Donut");
+  const [selectedType, setType] = useState<ChartType>(
+    response?.type || "Donut"
+  );
 
   const hasResults = response?.results;
   return (
@@ -85,27 +85,9 @@ export default function History({
         <>
           {hasResults ? (
             <>
-              {response.results.length === 0 && (
-                <Callout
-                  marginTop="mt-4"
-                  title="Query coulnt be displayed"
-                  icon={ExclamationIcon}
-                  color="rose"
-                  text="The query didn't return any result"
-                />
-              )}
-              {Object.keys((response.results || [])[0] || {}).length > 2 && (
-                <Callout
-                  marginTop="mt-4"
-                  title="Query coulnt be displayed"
-                  icon={ExclamationIcon}
-                  color="rose"
-                  text="The results have more than two columns, not supported yet"
-                />
-              )}
               <DynamicChart results={response.results} type={selectedType} />
 
-              <Flex justifyContent="justify-center">
+              <Flex justifyContent="justify-center" marginTop="mt-5">
                 <Toggle value={selectedType} onValueChange={setType}>
                   <ToggleItem value="Donut" text="Donut" icon={ChartPieIcon} />
                   <ToggleItem
@@ -118,6 +100,8 @@ export default function History({
                     text="Line"
                     icon={PresentationChartLineIcon}
                   />
+
+                  <ToggleItem value="Table" text="Table" icon={TableIcon} />
                 </Toggle>
               </Flex>
               <Flex justifyContent="justify-center" spaceX="space-x-8">
